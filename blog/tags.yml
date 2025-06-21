@@ -17,3 +17,34 @@ hola:
   label: Hola
   permalink: /hola
   description: Hola tag description
+
+code-c-cpp:
+  label: C/C++
+  permalink: /code-c-cpp
+  description: C/C++ coding content
+
+code-cuda:
+  label: Cuda
+  permalink: /code-cuda
+  description: Cuda coding content
+
+code-rust:
+  label: Rust
+  permalink: /code-rust
+  description: Rust coding content
+
+code-python:
+  label: Python
+  permalink: /code-python
+  description: Python coding content
+
+code-typescript:
+  label: TypeScript
+  permalink: /code-typescript
+  description: TypeScript coding content
+
+life-travel:
+  label: Travel
+  permalink: /life-travel
+  description: Lifestyle and travel content
+

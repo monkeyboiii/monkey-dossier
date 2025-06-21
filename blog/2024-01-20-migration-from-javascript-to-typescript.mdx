@@ -1,0 +1,1016 @@
+---
+slug: migration-from-javascript-to-typescript
+title: Migration from JavaScript to TypeScript 🚀
+authors: calvin
+tags: [code-typescript]
+---
+
+import { Color } from '@site/src/components/Color';
+import Link from '@docusaurus/Link';
+
+Learn how to migrate confidently, structure projects for scale, and master TypeScript's powerful type system.
+
+{/* truncate */}
+
+## 1 Preliminary 🤓
+
+:::note
+Skip this part if you are already familiar with TypeScript.
+:::
+
+### 1.1 Why is TypeScript needed?
+
+TypeScript adds <span style={{color:'#ff8000'}}>typing</span> to JavaScript.
+
+Historically, the trade-off for not having types in your JavaScript application was fine because the size and complexity of the programs being built were relatively small and constrained, mostly involving front-end websites. Today though, JavaScript is being used almost everywhere, to build almost anything which runs on a computer. It's becoming increasingly error-prone to build large projects based on vanilla JavaScript.
+
+To build an easy-to-understand, easy-to-maintain, and less complicated application reliably, we use <span style={{color:'#28b463'}}>TypeScript</span> to eliminate some of the errors at compile time, whilst still enjoying the ease of use from JavaScript. One possible benefits is that, if were to switch from JavaScript to TypeScript, many source files can be bundled and compiled with TypeScript to emit declaration files `.d.ts` for SDK consumption, therefore allowing for interaction and integration with downstream projects.
+
+For this article, much of the content is the summarization of the official TypeScript [documentation](https://www.typescriptlang.org/docs/), so if you ever feel confused, please go to the relevant sections! And if you ever feel doubtful about certain content, please comment to let me know.
+
+#### 1.1.1 Detour: Terminology
+
+1. **Type**: A type <span style={{color:'#33c1ff'}}>*t*</span> defines a set of possible data values. If an expression is assigned type <span style={{color:'#33c1ff'}}>*t*</span>, and it evaluates to a value <span style={{color:'#33c1ff'}}>*v*</span>, then <span style={{color:'#33c1ff'}}>*v*</span> is in the set of values defined by <span style={{color:'#33c1ff'}}>*t*</span>.
+    - E.g. `short` in C is $x \in \mathbb{Z} \cap \{ x | -2^{15} \le x \le 2^{15}-1 \}$.
+    - A value in this set is said to have type <span style={{color:'#33c1ff'}}>*t*</span>.
+2. **Type system**: rules of a language assigning types to expressions.
+3. **Type checking**:
+    - Static: type assigned to an expression at compile time.
+    - Dynamic: type assigned to a storage location at run time.
+4. **Type inference**: A program analysis to assign a type to an expression from the program context of the expression.
+5. **Transpiler**: a specific term for taking source code written in one language and transforming into another language that has a similar level of abstraction, aka source-to-source compilers. In the following documentation, I will use compile and transpile interchangeably, in the context of TypeScript.
+
+A rule of thumb is to think of types operations in terms of set operations, as a specific type is the name of a set of values.
+
+#### 1.1.2 Detour: Famous JS Standards
+1. ECMAScript 5 (ES5, ES2009): It introduced several important features such as strict mode, JSON support, and improved array
+manipulation.
+2. ECMAScript 6 (<span style={{color:'#28b463'}}>ES6</span>, ES2015): It introduced several important features such as `let` and `const`, arrow functions, template literals, and classes.
+3. ESNext: Next generation of the ECMAScript, evolving.
+
+### 1.2 How Painful/Painless is the Migration?
+
+<span style={{color:'#ff8000'}}>Suggested</span>: starting from 2, ending at 5.
+
+1. No pain: TypeScript is a superset of JavaScript, so essentially but trivially you are already writing TypeScript!
+2. Hardly any pain: Install TypeScript tools and add a configuration file.
+3. Moderate pain: Configure a less safe compiler, rename one file to `.ts`, annotate types, and run some common TypeScript checks.
+4. Acceptable pain: Apply the same procedure to all the `.js` files.
+5. Bearable pain: Configure a very safe TypeScript compiler and weed out all the red squiggles.
+6. Absolute pain: Adding types to every expression at once (<span style={{color:'#e74c3c'}}>DON'T DO THIS</span>).
+
+## 2 Toolings & Best Practices 🛠
+
+:::note
+Skip this part if you are already familiar with TypeScript compilers.
+:::
+
+### 2.1 TypeScript Compiler
+
+Assuming you have npm installed, then running
+
+```sh
+npm i -g typescript
+```
+
+will install the tsc compiler into your system.
+
+### 2.2 tsconfig.json
+
+Add this file to the root directory of a project. This file is similar to `package.json`, in a way that defines the behavior of the `tsc`. A quick example is shown to configure a sample repo. Comments are for explanations only, remove for actual usage. For a more specific case, refer to part <Link to="#part-4-3">4.3</Link>. For the complete documentation on configurable options, refer to this [link](https://www.typescriptlang.org/tsconfig/).
+
+```json
+{
+    "compilerOptions":{
+        "target":"es6",             // Define the target compilation JS standards
+        "module":"node16",          // Define the module system for the target compilation
+        "noImplicitAny":true,       // Do not allow inferred type `any` to be eluded
+        "preserveConstEnums":true,  // Do not erase const enum declaration to save memory
+        "outDir":"dist/",           // Emit compiled .js files under `rootDir`/dist directory, while preserving same structure of you project
+        "sourceMap":true            // Allow debugger to show original TS code when running JS
+    },
+    "include":["src/**/*"],         // Files to include for compilation
+    "exclude":["**/*.spec.ts"]      // Vice versa
+}
+```
+
+:::tip
+To set `node` to use ES6 module system, add `{“type": "module"}` in package.json file under the root object. Otherwise, the default `node` uses the commonjs module system.
+:::
+
+More on module system will be covered in part <Link to="#part-4-2">4.2</Link>.
+
+### 2.3 Linting
+
+To enforce a more rigorous and reproducible TypeScript formatting and testing regimen, use the de facto standard linter `ESLint`. Run this command to install and configure the linter.
+
+```sh
+npm init @eslint/config
+```
+Now you will notice a `.eslintrc.json` file under the root directory, this file controls the linting options. For a minimal linting setting, you are ready to go. If you want to lint the project, run this command.
+
+```sh
+eslint . --ext .ts
+```
+
+This will lint all `.ts` files under the root directory.
+
+For a complete linter configuration, refer to this [link](https://eslint.org/docs/latest/).
+
+### 2.4 Testing
+
+Testing usually consists of a test framework and a test runner. Common test frameworks and runners include [Jest](https://jestjs.io/) and [Mocha](https://mochajs.org/), depending on your setup.
+
+For installation, run this command.
+
+```sh
+npm i --save-dev @types/jest
+```
+
+### 2.5 Misc
+
+1. `.editorconfig` is a cross-editor code formatting configuration file, recognizable by common code editors like Visual Studio Code, IntelliJ, etc.
+2. `tsconfig.release.json` is a alternative file config to use for publishing your project to a registry, usually with minimal dependencies and should be used after rigorous tests.
+3. `package-lock.json` and `yarn.lock` both freezes dependencies to ensure a deterministic install from another environment. 
+4. `.npmignore` helps `npm` to ignore files and directories when running its scripts, and it will default to use `.gitignore` if not present.
+5. `webpack.config.js` is a configuration file governing the desired bundling behavior, usually used by front-end projects. It can be used with TypeScript to enable bundling of compiled JavaScript files from `tsc`.
+
+### 2.6 Real Examples
+
+There is a difference between writing application code and library code. To write a robust and readable library code, we need to utilize many of the tools mentioned to enable debugging and integration with downstream TypeScript consumers, e.g. emitting `.d.ts` files for type checking. Here is a complete [example](https://marcobotto.com/blog/compiling-and-bundling-typescript-libraries-with-webpack/) of front-end library code. More on this in part <Link to="#part-4-4">4.4</Link>.
+
+To start a modern TypeScript project, follow the best practices in this [repo](https://github.com/jsynowiec/node-typescript-boilerplate).
+
+## 3 Typing Deep Dive 🤿
+
+:::tip
+You can try these code snippets in the TypeScript [playground](https://www.typescriptlang.org/play/)!
+:::
+
+### 3.1 Beginner {#part-3-1}
+
+At the beginner level, let's get familiar with some common types and the syntax for type annotation.
+
+1. Primitive types:
+    - `string`
+    - `number`
+    - `bigint`
+    - `boolean`
+    - `symbol`
+    - `null`
+    - `undefined`
+2. Other types:
+    - `any`
+    - `unknown`
+    - `never`
+    - `void`
+    - `Array<T>`, or `T[]`
+    - Tuple: `[T, ...any]`
+    - Function, or `(...args: any) => any`
+    - `Object`, `object` and `{}`. See the differences explained in this [article](https://jser.dev/typescript/2023/01/12/typescript-object-Object/).
+    - Literal types
+3. Other Keywords:
+    - `interface`
+    - `type`
+    - `class`
+    - Optional property: postfix`?`
+    - Non-null assertion operator: postfix`!`
+    - Type assertion: `as`
+4. Type aliasing
+
+Now let's see some examples of these types in action.
+
+::::warning
+Showcasing a captured error
+```typescript
+// Annotation by adding `:`
+function greet(person: string, date: Date){
+  console.log(`Hello ${person}, today is ${date.toDateString()}!`);
+}
+
+greet("Maddison", Date());
+```
+:::danger
+Error: argument of type `string` is not assignable to parameter of type `Date`
+:::
+
+Fixable by adding `new` keyword before `Date()`
+
+```typescript
+greet("Maddison", new Date());
+```
+::::
+
+Showcasing beginner types.
+```typescript
+// In the following example,
+// we build a generic EmployArray class step by step.
+
+const sym = Symbol('uuid-8848');
+
+
+interface Employee {
+  name: string,
+  age: number,
+  id: bigint,
+  married: boolean,
+  notMarried: null // null is both type and value
+  knowledge: any,
+  
+  uuid: symbol,
+  // Need to get the value of sym, instead of using `sym` as a key
+  // which is Symbol('uuid-8848') in this case
+  [sym]: string,
+  
+  hobbies?: Array<string> // or `string[]`, adding `?` makes it equivalent to Array<string> | undefined
+  gender: 'male' | 'female' | unknown, // Literal types, unioned with unknown
+  comments: [string, ...any] | null,
+  
+  greet: (str: string, name?: string) => void,
+}
+
+
+// aliasing
+type EmployeeType = Employee
+
+
+const monkeyboi: EmployeeType = {
+  name: "monkeyboi",
+  age: 23,
+  married: false,
+  id: BigInt(8848), // ES2020 feature
+  notMarried: null,
+  knowledge: 6*7, // any type of value is applicable
+  
+  uuid: sym,
+  [sym]: '8848' as string, // assertion
+  
+  // hobbies undefined
+  gender: 'helicopter', // no method allowed for unknown
+  comments: ['hello', 42],
+  
+  greet: (who: string) => console.log(`Hello from ${String(sym)} to ${who}!`),
+}
+
+
+// This function never returns
+function neverReturningFunction(e: Employee): never {
+  while(true) {
+    // NOT okay on null type
+    // console.log(e.notMarried!.toFixed());
+    
+    // If you insist, live life dangerously
+    console.log(e.comments![0].toUpperCase());
+  }
+}
+
+
+// Outputs "Hello from Symbol(uuid-8848) to my colleagues!" to console
+monkeyboi.greet('my colleagues')
+```
+
+For a deep comparison of keyword `type` and `interface`, refer to this [link](https://blog.logrocket.com/types-vs-interfaces-typescript/).
+
+### 3.2 Intermediate
+
+As you may have noticed before, `array`, `tuple`, and `function` types can use <span style={{color:'#33c1ff'}}>generics</span> to define a specific version of these types. To understand generics and its relevant keywords, think of the set of sets that satisfy a particular requirement, e.g.
+
+1. The set of arrays whose elements are of a specific type <span style={{color:'#33c1ff'}}>*t*</span> in type generic notation `T`.
+2. The set of Employees that have a `greet` function that can use more than just `string` input.
+    - Note that the example in part <Link to="#part-3-1">3.1</Link> is not a generic form.
+    - A correct form should look something like `type greet<T, U> = (arg: T) => U`.
+
+In the following example, I include
+
+1. Types:
+    - generics
+2. Keywords:
+    - `extends`
+    - `keyof`
+    - `...`
+    - `typeof`
+3. Index signature
+
+```typescript
+// In the following example
+// we build a generic EmployArray class from top to bottom
+
+
+// An array should have length property defined
+interface LengthAble {
+  length: number
+}
+
+
+// We should be able to push and pop
+// Here a generic type T is supplied 
+// meaning we can build any type of Array based off of this interface
+interface PushPopAble<T> extends LengthAble {
+  push(...items: T[]): number, // Rest parameters
+  pop(): T | undefined
+}
+
+
+// Type constraints
+//
+// `keyof` returns the key names of type T in string literal, unioned by `|`
+// i.e. keyof {a: any, b: any} <==> "a" | "b"
+// `extends` usually means a child class or interface
+// In the following case of type constraints, however,
+// `extends` means as long as `K` has one of the key names in `keyof T` (union type), it's fine 
+function getProperty<T, K extends keyof T>(obj: T, keyName: K) {
+  return obj[keyName];
+}
+
+
+// Index signatures
+//
+// of numbers
+interface NumberIndex {
+  [n: number]: unknown
+}
+// of strings
+interface StringIndex {
+  [k: string]: boolean | string,
+}
+// On index signatures, `keyof` returns the indexing types
+// Note that in JavaScript object keys are always coerced to `string`
+// `keyof` will return
+type KeyofNumberIndex = keyof NumberIndex // <==> number
+type KeyofStringIndex = keyof StringIndex // <==> string | number
+
+
+// interface has public members
+interface Employer extends NumberIndex {
+  name: string,
+}
+interface Employee extends StringIndex {
+  name: string,
+}
+
+
+// Generic parameter defaults
+class EmployArray<T extends Employee | Employer = Employee> implements PushPopAble<T> {
+  private arr: Array<T>;
+  get length(): number {
+    return this.arr.length;
+  }
+  constructor() {
+    this.arr = [];
+  }
+  public push(...items: T[]) {
+    this.arr.push(...items);
+    return this.length;
+  }
+  public pop() {
+    return this.length == 0 ? undefined : this.arr.pop();
+  }
+  public greet<U extends Employee | Employer>(other: U, ...rest: any[]) {
+    for (const e of this.arr) {
+      console.log(`Hello from ${e.name} to ${other.name}`)
+      if (rest.length > 0) {
+        console.log('and others');
+      }
+    }
+  }
+}
+
+
+// Now try to use them
+const monkeyboi: Employee = {
+  "name": "monkeyboi",
+  "isMonkey": true,
+  "isBoss": false,
+  1: true, // coerced
+}
+// `typeof` extracts the type of a value in TypeScript,
+// not to be confused with the `typeof` operator in JavaScript used at runtime.
+const monkeygirl: typeof monkeyboi = {
+  "name": "monkeygirl",
+  "isMonkey": true,
+  "isBoss": false,
+}
+const monkeyboss: Employer = {
+  "name": "monkeyboss",
+  1: null
+}
+const ea = new EmployArray<Employee>(); // Can also supply Employer
+ea.push(monkeyboi);
+ea.push(monkeygirl);
+// Outputs 
+// "Hello from monkeyboi to monkeyboss"
+// "Hello from monkeygirl to monkeyboss" to console
+ea.greet(monkeyboss);
+```
+
+### 3.3 Advanced
+
+As you may have noticed before, types can be combined using basic algebraic expressions to create ADTs (algebraic data type). ADTs are concepts that originated from functional programming languages. We will see some examples below as well as utility types which are provided by TypeScript to express more than what basic typing is capable of.
+
+1. Types:
+    - union
+    - intersection
+2. Indexed access types
+3. Conditional types
+4. keyword:
+    - `infer`
+5. Mapped types
+    - Remapping keyword: `as`
+6. Template literal types
+
+```typescript
+// Showcasing 1 2 3 4
+
+
+interface Employee {
+    name: string
+    // Union
+    // 
+    // as you have already seen previously
+    gender: 'male' | 'female' | unknown
+}
+interface GreetAble {
+    gender: 'N/A',
+    greet: Function // global `Function` interface
+}
+
+
+// Intersection
+//
+// gets all the properties from both types
+// Note that some intersections of properties will produce the `never` types
+// e.g. when the same key is present in both types but with certain different types, `string` & `number`
+// P.S. The following behavior is not recommended as some unexpected types may be produced
+type GreetAbleEmployee = Employee & GreetAble 
+// {
+// name: string
+// gender: 'N/A' // unexpected
+// greet: Function
+// }
+type GAEArray = Array<GreetAbleEmployee>
+
+
+// Indexed access types
+//
+// use literal types, `number` (preferred), union types
+// to access nested type definitions
+type LiteralKey = 'name' // also known as unit type
+type NumberKey = number // primitive type
+type UnionKey = LiteralKey | 'greet'
+
+type _A = GreetAbleEmployee[LiteralKey] // or GreetAbleEmployee['name'], <==> string
+type _B = GAEArray[NumberKey] // <==> GreetAbleEmployee
+type _C = GreetAbleEmployee[UnionKey] // <==> string | Function
+type _Not_Recommended_B = GAEArray[0] // <==> B
+// Wrong, mixing types and values 
+// num refers to a value, but is being used as a type here
+const num = 0;
+// type _Error_B = GAEArray[num]
+type _Fix_Error_B = GAEArray[typeof num] // works but unnecessary and unintuitive
+
+
+// Conditional types
+//
+// combines `number` as indexing type to get the `T` type
+type Flatten<T> = T extends any[] ? T[number] : T
+type EquivalentToGreetAbleEmployee = Flatten<GAEArray>
+type AlsoEquivalentToGreetAbleEmployee = Flatten<GreetAbleEmployee>
+
+
+// `infer`
+//
+// The `Flatten<T>` type can be further enhanced with `infer` keyword
+// by introducing a new generic type identifier to perform intuitive extraction
+type FlattenEnhanced<T> = T extends Array<infer Item> ? Item : T;
+type EquivalentToFlattenEnhance<T> = T extends (infer Item)[] ? Item : T;
+
+// When acting on a generic type,
+// conditional types becomes distributive when given a union type
+// `never` indicates all types should get arrayfied
+type ToArray<T> = T extends any ? T[] : never;
+type StrArrOrNumArr = ToArray<string | number>; // <==> string[] | number[]
+
+// To disable distributivity, do brackets around types
+type ToArrayNonDist<T> = [T] extends [any] ? T[] : never;
+type ArrOfStrOrNum = ToArrayNonDist<string | number>; // <==> (string | number)[]
+```
+
+Let's pause for a second. You may have already got a taste of how powerful ADTs are, and TypeScript kicks it up a notch by providing utility types. These types reside in the TypeScript library to facilitate common type transformations. Now let's see some explanations and definitions of these types, e.g.
+
+- `Partial<T>`, `Required<T>`
+
+```typescript
+// Showcasing 5
+
+
+// Mapped types
+//
+/**
+ * Make all properties in T optional
+ */
+type Partial<T> = {
+    // Here `P` is the key identifier to access types in `T`
+    // You can use modifier ? to make new `P` properties optional
+    [P in keyof T]?: T[P]; // <==> [P in keyof T]+?: T[P];
+}; 
+/**
+ * Make all properties in T required
+ */
+type Required<T> = {
+    // Similarly, `-` appended to `?` replaces previously optional properties with required ones
+    [P in keyof T]-?: T[P];
+};
+// You can also make new properties `readonly`, but how?
+// I leave it as a thought exercise 🙋, you can find answers in section 6 appendix
+```
+
+- `Record<K, V>`
+
+```typescript
+// `keyof any` returns `string | number | symbol`
+// as these types can be used as property keys
+/**
+ * Construct a type with a set of properties K of type T
+ */
+type Record<K extends keyof any, T> = {
+    [P in K]: T;
+};
+```
+
+- `Pick<T, K>`, `Omit<T, K>`
+- `Exclude<T, U>`, `Extract<T, U>`, these types work best with union types supplied to T. You may have overlooked the power of union types, now it's time to reestablish its reputation.
+
+```typescript
+// Definitions
+//
+/**
+ * Exclude from T those types that are assignable to U
+ */
+type Exclude<T, U> = T extends U ? never : T;
+/**
+ * Extract from T those types that are assignable to U
+ */
+type Extract<T, U> = T extends U ? T : never;
+
+
+// Usage
+//
+// On a discriminated union type
+type EmployeeLike = 
+| {
+    level: 'boss',
+    name: string
+} | {
+    level: 'tse',
+    name: string
+} | {
+    level: 'tsa',
+    name: string
+}
+// using property `level`
+type HighlevelEmployee = Extract<
+    EmployeeLike, 
+    {level: 'boss'} | {level: 'tsa'}
+> // will return only `boss` or `tsa` level types
+type CodingEmployee = Exclude<
+    EmployeeLike, 
+    {level: 'boss'}
+> // will return only `tse` or `tsa` level types
+```
+
+- etc.
+
+You can look up the definitions of more utility types in the library. Now we know these utility types, we can further use them to build mapped types with template literal types.
+
+```typescript
+// Showcasing 5.a 6
+
+
+// Remapping keyword `as` w/ template literal types
+//
+// modifies all keys of `T` type to have `getXxxx` form
+type Getters<T> = {
+    // Capitalize<T> is an intrinsic string manipulation in the compiler
+    [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K]
+};
+interface Employee {
+    name: string,
+    gender: 'male' | 'female' | unknown
+}
+type EmployeeGetters = Getters<Employee>
+// <==> 
+// {
+// getName: () => string,
+// getGender: () => unknown
+// }
+
+// You can remove gender using conditional typing
+type RemoveGenderField<T> = {
+    [K in keyof T as Exclude<K, "gender">]: T[K]
+};
+type NoGenderEmployee = RemoveGenderField<Employee> // <==> { name: string }
+
+// You can map over arbitrary unions using indexed access types
+// Continue using the EmployeeLike union
+type LevelConfig<T extends { level: any }> = {
+    // Here U represents each type that is unioned togther, hence no `keyof`
+    [U in T as U["level"]]: (level: U) => void;
+}
+interface Boss extends Employee {
+    readonly level: 'boss',
+    office: string,
+}
+interface TSE extends Employee {
+    readonly level: 'tse',
+    cube: string,
+}
+interface TSA extends Employee {
+    readonly level: 'tsa',
+    cubicle: string,
+}
+type EmployeeLike = Boss | TSE | TSA
+type Config = LevelConfig<EmployeeLike>
+// What does the type `Config` look like?
+// I leave it as a thought exercise 🙋, you can find answers in section 6 appendix
+
+
+// Template Literal types w/ string unions
+//
+// Here I try to implement a Proxy from scratch,
+// which will delegate calls to setter functions, aka implementing hooks
+// ref https://stackoverflow.com/questions/73747438/how-can-i-implement-function-makewatchedobject-in-typescript-documentation
+
+// We can add an geneirc `on` function to accept 
+// events with different types (string unions), preferably.
+type OnPropertyChanged<T> = {
+    // `string & keyof` extracts only string indexing properties
+    on<K extends Exclude<string & keyof T, "level">>
+        (eventName: `${K}Changed`, callback: (newValue: T[K]) => void): void;
+}
+
+// Wraps object in Proxy, intercept setters
+function makeWatchedObject<T>(obj: T): T & OnPropertyChanged<T> {
+    const cache = new Map<string, (newValue: any) => void>();    
+    const on = (change: PropertyKey, callback: (newValue: any) => void) => {
+        cache.set(typeof change === "string" ? change.replace("Changed", "") : String(change), callback);
+    }
+    return new Proxy<T & OnPropertyChanged<T>>({
+        ...obj, on
+    }, {
+        set: (_target: T, prop: PropertyKey, newValue: any) => {
+            cache.get(String(prop))?.(newValue);
+            return true;
+        }
+    });
+}
+
+// monkeyboi comes at it again
+const monkeyboi = makeWatchedObject({
+    // since types are erased at runtime, `level` will be `undefined`
+    // level: 'tse',
+    name: 'monkeyboi',
+    cube: '707E',
+    gender: 'male'
+} as TSE);
+
+// register nameChanged event
+monkeyboi.on("nameChanged", newName => {                        
+    console.log(`New name is ${newName.toUpperCase()}`);
+});
+
+// Outputs "New name is WORKING MONKEYBOI" to console
+monkeyboi.name = 'working monkeyboi'
+```
+
+Let's see two more example of utility types `ConstructorParameters<T>`, `Awaited<T>` before wrapping up this part.
+
+```typescript
+// Showcasing library code
+// You can try to reason yourself! 
+
+
+// I put this here to show you `abstract` and `new` keywords are also extendable
+/**
+ * Obtain the parameters of a constructor function type in a tuple
+ */
+type ConstructorParameters<T extends abstract new (...args: any) => any> = 
+    T extends abstract new (...args: infer P) => any 
+    ? 
+    P 
+    :
+    never;
+
+
+// Try to follow the logic flow, and do the reasoning!
+// I leave it as a thought exercise 🙋, you can find answers in section 6 appendix
+/**
+ * Recursively unwraps the "awaited type" of a type. 
+ * Non-promise "thenables" should resolve to `never`. 
+ * This emulates the behavior of `await`.
+ */
+type Awaited<T> = T extends null | undefined
+    ?
+    T
+    : 
+    T extends object & { then(onfulfilled: infer F, ...args: infer _): any; }
+        ?
+        F extends ((value: infer V, ...args: infer _) => any)
+            ?
+            Awaited<V>
+            :
+            never
+        :
+        T;
+```
+
+### 3.4 Expert
+
+Here I try to cover some typing knowledge that I found interesting, not saying that I'm an expert. Somehow I feel the need to add this level, but I have yet to find an appropriate name.
+
+- Mixins
+
+Mixins allow your class to extend more than a single base class, by utilizing the generic type on constructors. Here's an example.
+
+```typescript
+class Employee {
+  name: string;
+  constructor(name: string) {
+    this.name = name;
+  }
+}
+
+
+type Constructor<T = {}> = new (...args: any[]) => T;
+// You can also add constraint to type Constructor<T>
+type NamedEmployee = Constructor<Employee>
+
+
+function EmailEmployee<TBase extends NamedEmployee>(Base: TBase) {
+  return class EmailEmployee extends Base {
+    // Mixins may not declare private/protected properties
+    // however, you can use ES2020 private fields
+    _email = `${this.name.substring(0,5)}@microstrategy.com`;
+ 
+    setEmail(email: string) {
+      this._email = email;
+    }
+ 
+    get email(): string{
+      return this._email;
+    }
+  };
+}
+```
+
+- `enum` and `const enum` eliding
+
+At this point I believe you have a fairly good picture of how the tsc compiler fits into the picture, namely handling compile time transformations. Since JavaScript doesn't fully support features in TypeScript, some pitfalls need our attention, and enum is one of such.
+
+1. The `keyof` keyword works differently.
+2. There is a reverse mapping to the actual enum string literal.
+
+```typescript
+// Showcasing 1 2
+
+// Regular enum
+//
+enum LogLevel {
+  ERROR,
+  WARN,
+  INFO,
+  DEBUG,
+}
+ 
+/**
+ * This is equivalent to:
+ * type LogLevelStrings = 'ERROR' | 'WARN' | 'INFO' | 'DEBUG';
+ */
+type LogLevelStrings = keyof typeof LogLevel;
+
+
+// const enum
+//
+const enum ConstLogLevel {
+  ERROR,
+  WARN,
+  INFO,
+  DEBUG,
+}
+
+// Reverse mapping
+//
+const error = LogLevel.ERROR;
+console.log(LogLevel[error]) // outputs "ERROR"
+const warn = ConstLogLevel.WARN;
+// console.log(ConstLogLevel[warn]) // error: A const enum member can only be accessed using a string literal
+console.log(ConstLogLevel['WARN']) // outputs "1"
+```
+
+:::warning
+Incoming pitfalls!
+:::
+
+Constant enums are inlined, so if you use ambient const enums (basically enums inside `.d.ts` files, prefixed with `declare` keyword, more on this in part <Link to="#part-4-4">4.4</Link>), the `tsc` compiler of your downstream consumers will not recognize reference to the enum member, so you have to be careful not to use that. One solution is not to publish ambient const enums, by deconstifying them with the help of `perserveConstEnums`.
+
+More on this topic in [link](https://www.typescriptlang.org/tsconfig#references-to-const-enum-members) and [link](https://www.typescriptlang.org/docs/handbook/enums.html#const-enum-pitfalls).
+
+## 4 Miscellaneous 📚
+
+While these topics may be miscellaneous, they're certainly not trivial, especially part <Link to="#part-4-2">4.2</Link> module systems.
+
+### 4.1 Truthiness Test
+
+Truthiness may not be a valid word, but it certainly is in the realm of JavaScript, because of the infamous cases with
+
+1. `null`
+2. `undefined`
+3. `"",` the empty string
+4. `0`
+5. `0n`, the bigint version of 0
+6. `NaN`
+
+Alongside true and false, these values are central to JavaScript's boolean coercion model. Here I'm referring to the values, as you may know that `null` is the only value in type `null`, and same holds for `undefined`.
+
+In JavaScript, constructs like `if` first coerce the conditions to `boolean`s, and then choose branches based on the evaluation to either `true` or `false`. The above 6 values get coerced to `false`, while the rest are `true`. Moreover, by prefixing the expression with `!!`, you get the coerced boolean value false explicitly.
+
+```typescript
+// type: true, value: true
+// Note that the type `true` means the literal boolean type
+!!'monkey' 
+```
+
+### 4.2 Module Systems {#part-4-2}
+
+This is a simplified overview of different common module systems. The tsc compiler can support many different module formats. To enable modern features like dynamic imports, import.meta, or even top-level await, you need to use `ES2020`, `ES2022` or later versions.
+
+|                   |        Runs on       | Loaded | Filename ext. |
+|:-----------------:|:--------------------:|:------:|:-------------:|
+| Script            | browsers             | async  | `.js`         |
+| CommonJS module   | servers              | sync   | `.js` `.cjs`  |
+| AMD module        | browsers             | async  | `.js`         |
+| ECMAScript module | browsers and servers | async  | `.js` `.mjs`  |
+
+I will give some simple example on the syntax and elaborate more on the idea behind. To see the tsconfig.json specification, go [here](https://www.typescriptlang.org/tsconfig#module). To get a primer, go [here](https://exploringjs.com/impatient-js/ch_modules.html).
+
+#### 4.2.1 AMD, UMD
+
+AMD enables asynchronous loading for the modules. This is designed for loaders like RequireJS. The `tsc` compiler replaces `import` and `export` with a `define` function which is limited to the scope of AMD, to the emitted files.
+
+UMD allows you to use the same module with AMD tools as well as in CommonJS environments. The `tsc` compiler basically replaces `import` and `export` with a function that chooses to use AMD or CommonJS based on the environment.
+
+#### 4.2.2 CommonJS
+
+CommonJS loads modules synchronously, and is widely supported by different versions of the `node` runtime. The most prominent feature are the `require` and `module.exports`.
+
+```typescript
+const anm = require('a_node_module');
+const alm = require('./a_local_module');
+
+const monkey = 1;
+
+module.exports = {
+  monkey
+}
+// in others file, use `const { monkey } = require('./here')`
+```
+
+:::tip
+This is JavaScript syntax for NodeJS!
+:::
+
+#### 4.2.3 ECMAScript Modules
+
+Also known as ES Modules or ESM, they were introduced in ES6 (ES2015), it has a rich syntax for importing and exporting, allowing for better module interoperation. TypeScript adds on top of that, adding modifiers like type before certain imported identifiers, allowing the compiler to perform further type analysis.
+
+Here is an simple example of certain usage. For ESM specifications, see [import](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), [export](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export), [modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules). For TypeScript flavor, see this [reference](https://www.typescriptlang.org/docs/handbook/modules/reference.html#system).
+
+```typescript
+import {f, type Employee} from './module.js';
+import * as mod from './module.js'; // imports the module as a kind of namespace
+
+function f1() {}
+export function f2() {}
+type t1 = any;
+export t2 = any;
+interface i1 {}
+export interface i2 {}
+
+export default function df() {) // in other files, `import df from "./here.js";` gives this function
+
+export {
+  f1, i1, t1
+}
+```
+
+### 4.3 tsconfig.json Revisited {#part-4-3}
+
+Revisit the modern configuration of the compiler, specifically the compilerOption field, with respect to type related configurations.
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2022", // lowest ECMAScript version that your emitted code intends to support
+    "module": "node16", // set to this if you are using nodejs as runtime
+    "lib": ["ES2022"],
+    "moduleResolution": "node16", // according to "module"
+    "rootDir": ".",
+    "outDir": "build",
+    "allowSyntheticDefaultImports": true,
+    "importHelpers": true, // allow importing helper functions from tslib once per project, instead of including them per-file
+    "alwaysStrict": true, // ensure 'use strict' is always emitted.
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true, // enable error reporting for codepaths that do not explicitly return in a function
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitAny": true,
+    "noImplicitThis": false, // enable error reporting when `this` is given the type `any`
+    "strictNullChecks": true, // 
+  },
+  "include": ["src/**/*", "__tests__/**/*"]
+}
+```
+
+### 4.4 Application vs Library Development {#part-4-4}
+
+You may have noticed the `declare` keyword was previously omitted.. It serves as a hint to the `tsc` compiler, telling it that some identifier is defined elsewhere. For example, you have a pure JavaScript library, and in order for TypeScript code to use it effectively, the compiler needs to know the expected type the files in the library generate at runtime.
+
+Due to the dynamic typing nature of JavaScript, types are only enforced at runtime, meaning types are not inferable at compile time. In TypeScript, however, types are annotated and recognized by the compiler, and erased after compiling to JavaScript.
+
+For your existing TypeScript code to use JavaScript library, a declaration file suffixed `.d.ts` is often supplied for type checking. Notice this file contains only type information, as you may notice in library code files in `node_modules`, they always include a declaration file along with the `.cjs` file with the same name.
+
+Therefore, there is a difference to writing TypeScript application code vs library code. Application code typically only needs to be compiled into `.js`, `.mjs`, or `.cjs` files, while library code typically needs to include the declaration files on top of that, for other TypeScript projects to seamlessly integrate and perform type checking, while reducing the overall compilation time. One caveat is that JavaScript interpreters execute code at runtime, which limits performance compared to compiled languages.
+
+More on this topic with respect to part <Link to="#part-4-3">4.3</Link> in this link.
+
+
+
+### 4.5 Yet to Cover
+
+These are topics that I found not interesting, or straightforward enough. Most readers of this article are probably not invested to see their explanations. You can find their documentation in
+
+1. `namespace`
+2. `class` related
+    - modifiers
+        - `public`
+        - `private`
+        - `protected`
+    - functions
+        - overloading
+        - override
+    - keyword
+        - `abstract`
+        - `implements`
+        - `static`
+
+## 5 Refs 📝
+1. [Documentation](http://typescriptlang.org/docs)
+2. [Type Systems](https://courses.grainger.illinois.edu/cs421/fa2023/CS421D/lectures/11-12-type-systems.pdf)
+
+## 6 Appendix 🪱
+
+> You can also make new properties `readonly`, but how?
+
+```typescript
+/**
+ * Make all properties in T readonly
+ */
+type Readonly<T> = {
+    readonly [P in keyof T]: T[P];
+};
+```
+
+What does the type `Config` look like?
+
+```typescript
+type Config = {
+    boss: (level: Boss) => void;
+    tse: (level: TSE) => void;
+    tsa: (level: TSA) => void;
+}
+```
+
+> What is the logic flow of the utility type `Awaited<T>`?
+
+```typescript
+/**
+ * Recursively unwraps the "awaited type" of a type. 
+ * Non-promise "thenables" should resolve to `never`. 
+ * This emulates the behavior of `await`.
+ */
+type Awaited<T> = T extends null | undefined
+    ? // special case for `null | undefined` when not in `--strictNullChecks` mode
+    T
+    : 
+    T extends object & { then(onfulfilled: infer F, ...args: infer _): any; } // extracts `F` by `infer`
+        // `await` only unwraps object types with a callable `then`.
+        ?
+        F extends ((value: infer V, ...args: infer _) => any)
+            ? // if the argument to `then` is callable, extracts the first argument
+            Awaited<V> // recursively unwrap the value
+            :
+            never // the argument to `then` was not callable
+        :
+        T; // Non-object or non-thenable not unwrapped.
+```

@@ -1,13 +1,37 @@
 yangshun:
-  name: Yangshun Tay
-  title: Ex-Meta Staff Engineer, Co-founder GreatFrontEnd
-  url: https://linkedin.com/in/yangshun
+  name: Haotian Lu
+  title: MicroStrategy Engineer
+  url: https://github.com/monkeyboiii.png
   image_url: https://github.com/yangshun.png
   page: true
   socials:
     x: yangshunz
     linkedin: yangshun
-    github: yangshun
+    github: monkeyboiii
+    newsletter: https://www.greatfrontend.com
+
+haotian:
+  name: Haotian Lu
+  title: MicroStrategy Engineer
+  url: https://github.com/monkeyboiii.png
+  image_url: https://github.com/yangshun.png
+  page: true
+  socials:
+    x: yangshunz
+    linkedin: yangshun
+    github: monkeyboiii
+    newsletter: https://www.greatfrontend.com
+
+calvin:
+  name: Calvin Lu
+  title: MicroStrategy Engineer
+  url: https://github.com/monkeyboiii.png
+  image_url: https://github.com/yangshun.png
+  page: true
+  socials:
+    x: yangshunz
+    linkedin: yangshun
+    github: monkeyboiii
     newsletter: https://www.greatfrontend.com
 
 slorber:
