@@ -46,12 +46,14 @@ function BlogPostPageContent({
       <ContentVisibility metadata={metadata} />
 
       <BlogPostItem>{children}</BlogPostItem>
-      <GiscusCommment />
-
 
       {(nextItem || prevItem) && (
         <BlogPostPaginator nextItem={nextItem} prevItem={prevItem} />
       )}
+
+      <div style={{ marginTop: '2rem' }}>
+        <GiscusCommment />
+      </div>
     </BlogLayout>
   );
 }
