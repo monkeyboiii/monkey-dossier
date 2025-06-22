@@ -19,7 +19,8 @@ const FeatureList: FeatureItem[] = [
     Svg: CodeSvg,
     description: (
       <>
-        I love building projects, exploring new technologies, and solving problems with code.
+
+        Currently learning massive parallel programming 🧵
       </>
     ),
   },
@@ -28,7 +29,7 @@ const FeatureList: FeatureItem[] = [
     Svg: FitnessSvg,
     description: (
       <>
-        Staying active through workouts and outdoor adventures has always been my passion.
+        strength training && soccer ⚽️
       </>
     ),
   },
@@ -37,7 +38,19 @@ const FeatureList: FeatureItem[] = [
     Svg: TravelSvg,
     description: (
       <>
-        I enjoy discovering new places, cultures, and creating lasting memories on the road.
+        <a href="/blog/china-adventures">
+          🇨🇳<span className="sr-only">China</span>
+        </a>{' '}
+        <a href="/blog/usa-roadtrip">
+          🇺🇸<span className="sr-only">United States</span>
+        </a>{' '}
+        🇳🇿<span className="sr-only">New Zealand</span>{' '}
+        <a href="/blog/iceland-ring-road">
+          🇮🇸<span className="sr-only">Iceland</span>
+        </a>{' '}
+        🇦🇹<span className="sr-only">Austria</span>{' '}
+        🇭🇺<span className="sr-only">Hungary</span>{' '}
+        🇸🇬<span className="sr-only">Singapore</span>
       </>
     ),
   },
@@ -63,7 +76,7 @@ export default function HomepageFeatures(): ReactNode {
       className={styles.features}
       style={{
         position: 'relative',
-        backgroundImage: "url('/img/lifestyle.jpg')",
+        backgroundImage: "url('/img/lifestyle-portrait.jpg')",
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

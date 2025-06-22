@@ -1,49 +1,10 @@
-yangshun:
-  name: Haotian Lu
-  title: MicroStrategy Engineer
-  url: https://github.com/monkeyboiii.png
-  image_url: https://github.com/yangshun.png
-  page: true
-  socials:
-    x: yangshunz
-    linkedin: yangshun
-    github: monkeyboiii
-    newsletter: https://www.greatfrontend.com
-
-haotian:
-  name: Haotian Lu
-  title: MicroStrategy Engineer
-  url: https://github.com/monkeyboiii.png
-  image_url: https://github.com/yangshun.png
-  page: true
-  socials:
-    x: yangshunz
-    linkedin: yangshun
-    github: monkeyboiii
-    newsletter: https://www.greatfrontend.com
-
 calvin:
   name: Calvin Lu
   title: MicroStrategy Engineer
-  url: https://github.com/monkeyboiii.png
-  image_url: https://github.com/yangshun.png
+  url: https://github.com/monkeyboiii
+  image_url: https://github.com/
   page: true
   socials:
-    x: yangshunz
-    linkedin: yangshun
+    x: calvinlu88
+    linkedin: calvinlu88
     github: monkeyboiii
-    newsletter: https://www.greatfrontend.com
-
-slorber:
-  name: Sébastien Lorber
-  title: Docusaurus maintainer
-  url: https://sebastienlorber.com
-  image_url: https://github.com/slorber.png
-  page:
-    # customize the url of the author page at /blog/authors/<permalink>
-    permalink: '/all-sebastien-lorber-articles'
-  socials:
-    x: sebastienlorber
-    linkedin: sebastienlorber
-    github: slorber
-    newsletter: https://thisweekinreact.com
