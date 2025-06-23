@@ -24,8 +24,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'monkeyboiii', // Usually your GitHub org/user name.
-  projectName: 'blog-cv', // Usually your repo name.
+  organizationName: 'monkeyboiii',
+  projectName: 'monkey-dossier',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -38,28 +38,46 @@ const config: Config = {
     locales: ['en', "zh-Hans"],
   },
 
+  // configure multiple instances of blog
+  plugins: [
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'lifestyle',
+        showReadingTime: true,
+        editUrl: 'https://github.com/monkeyboiii/monkey-dossier/edit/main/lifestyle/blog',
+        blogTitle: 'Lifestyle Blog',
+        blogDescription: 'Lifestyle blog for Calvin Lu and his friends',
+        blogSidebarCount: 5,
+        blogSidebarTitle: 'All experiences',
+        feedOptions: {
+          type: ['rss', 'atom'],
+          xslt: true,
+        },
+        path: 'lifestyle',
+        routeBasePath: 'lifestyle/blog',
+      },
+    ],
+  ],
+
   presets: [
     [
       'classic',
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/monkeyboiii/',
+          routeBasePath: '/learning',
+          path: 'learning',
+          editUrl: 'https://github.com/monkeyboiii/monkeyboiii/monkey-dossier/edit/main/learning',
         },
         blog: {
+          id: 'default',
           showReadingTime: true,
           feedOptions: {
             type: ['rss', 'atom'],
             xslt: true,
           },
-          // Please change this to your repo.
-          // Remove this to remove the "edit this page" links.
-          editUrl:
-            'https://github.com/monkeyboiii/monkey-dossier/tree/main/blog',
-          // Useful options to enforce blogging best practices
+          editUrl: 'https://github.com/monkeyboiii/monkey-dossier/edit/main/blog',
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'warn',
@@ -74,8 +92,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: 'img/docusaurus-social-card.jpg',
+    image: 'img/west-lake.jpg', // Replace with your project's social card
     navbar: {
       title: 'Monkey Dossier',
       logo: {
@@ -85,13 +102,17 @@ const config: Config = {
       items: [
         {
           type: 'docSidebar',
-          sidebarId: 'tutorialSidebar',
+          sidebarId: 'learningSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Learning',
         },
-        { to: '/blog', label: 'Blog', position: 'left' },
         {
-          href: 'https://github.com/facebook/docusaurus',
+          to: '/blog',
+          label: 'Blog',
+          position: 'left'
+        },
+        {
+          href: 'https://github.com/monkeyboiii/monkey-dossier',
           label: 'GitHub',
           position: 'right',
         },
@@ -101,28 +122,28 @@ const config: Config = {
       style: 'light',
       links: [
         {
-          title: 'CV',
+          title: 'Technical',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Learning',
+              to: '/learning/intro',
+            },
+            {
+              label: 'Blog',
+              to: '/blog',
             },
           ],
         },
         {
-          title: 'Community',
+          title: 'Contact',
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
               label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
+              href: 'https://discord.gg/ja2HUH6mMcd',
             },
             {
               label: 'X',
-              href: 'https://x.com/docusaurus',
+              href: 'https://x.com/calvinlu88',
             },
           ],
         },
@@ -130,17 +151,13 @@ const config: Config = {
           title: 'More',
           items: [
             {
-              label: 'Blog',
-              to: '/blog',
-            },
-            {
               label: 'GitHub',
-              href: 'https://github.com/facebook/docusaurus',
+              href: 'https://github.com/monkeyboiii/',
             },
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} My Project, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()} Monkey Home. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
@@ -157,7 +174,6 @@ const config: Config = {
       crossorigin: 'anonymous',
     },
   ],
-
 };
 
 export default config;
