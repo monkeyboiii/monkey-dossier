@@ -1,0 +1,215 @@
+---
+slug: template-is-the-culprit
+title: Template is the Culprit - A Lesson from C++ 🔧
+authors: calvin
+toc_max_heading_level: 4
+tags: [code-c-cpp]
+---
+
+import { Color } from '@site/src/components/Color';
+import SymbolConflictImageUrl from "./symbol-conflicts.png"
+import OrIsItImageUrl from "./or-is-it.gif"
+
+:::note[tl;dr]
+<span style={{color:'#e74c3c'}}>**DON'T**</span> use templates when writing library code where you want to hide the dependency on a third party library, so that downstream projects don't have to link against it. Use interface and inheritance instead.
+:::
+
+{/* truncate */}
+
+## 1 The Why ❓
+
+I was tasked to use `clickhouse-cpp`, a third party [library](https://github.com/ClickHouse/clickhouse-cpp) to interface with [ClickHouse](http://clickhouse.com/) database from my C++ codebase (my project for convenience), and I was excited to implement it. Little did I know, this was the beginning of a month-long <span style={{color:'#ff8000'}}>struggle</span> to get it working. At least in the journey, I refreshed my knowledge of C++, compiling/linking, [template metapprogramming](https://en.wikipedia.org/wiki/Template_(C%2B%2B)), and multi-threading.
+
+## 2 The Start 📍
+
+The first step was to build the library from source, which was seemingly straightforward. In itself, the library was a CMake project, and I was able to build it. But when I try to use it in the context of my project, all sorts of problems started appearing out of nowhere. So grab your ⛑️, relax, and see how I stubbed my toes, repeatedly!
+
+### 2.1 Symbol Conflict Resolution {#symbol-conflict-resolution}
+
+My project uses custom build scripts, and has a rigorous process for third party inclusions, i.e. scanning, integration with CI, etc. So when I tried to directly use the build artifact from the original `CMakeLists.txt`, the first hurdle there was symbol conflicts with my Macros flying around, specifically `Int64`, `Int32`, `UInt64`, `UInt32`. These were problematic since it was <span style={{color:'#e74c3c'}}>unrealistic</span> to change my codebase, so I had to do refactoring in the *clickhouse-cpp* source code. What I ended up doing was changed all occurrences of these symbols. For example, `Int64` alone had 40 places to change!
+
+<img className="mdx-img-half-width" src={SymbolConflictImageUrl} alt="Int64_CH Renaming" height="300"/>
+
+### 2.2 Third Party for clickhouse-cpp
+
+The *clickhouse-cpp* library itself has stripped down versions of third party libraries under the [contrib](https://github.com/ClickHouse/clickhouse-cpp/tree/master/contrib) directory, such as
+
+1. *abseil*
+2. *cityhash*
+3. *lz4*
+4. *zstd*
+
+So when my project tried to compile, the header files from these libraries were missing, because the default build artifact didn't emit those. So for each of the `CMakeLists.txt` under each third party library, I appended this instruction to install them.
+
+```CMake
+INSTALL (DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION include
+    FILES_MATCHING 
+        PATTERN "*.h"
+        PATTERN "*.inc"
+)
+```
+
+#### 2.2.1 OpenSSL
+One particularly messy third party library is *OpenSSL*. Because my project builds *OpenSSL* in-house, I actually wanted the *clickhouse-cpp* to link against our own *OpenSSL* binaries rather than its bundled version. In my custom build scripts, I added several build options.
+
+```shell
+cmake ${SRC} \
+	-DOPENSSL_INCLUDE_DIR=${OPENSSL_INCLUDE_DIR} \
+	-DOPENSSL_CRYPTO_LIBRARY=libcrypto.so \
+	-DOPENSSL_SSL_LIBRARY=libssl.so \
+	-DWITH_OPENSSL=ON \
+	-DBUILD_SHARED_LIBS=ON
+```
+
+:::tip[outcome]
+After this, the build artifact is a shared library with its third party libraries statically linked into them, and all the header  files installed to desired directory.
+:::
+
+### 2.3 Multi-platform Build and CI
+
+Successfully built for local development, I have to automate all those step by writing a script for CI to use. As for Windows, I let professionals do their professional jobs in this case 😊, shout out to my CI <span style={{color:'#33c1ff'}}>teammates</span>.
+
+#### 2.3.1 Linux
+
+Linux uses `.so` files for shared library and dynamic linking, and symbols are exported by default.
+
+#### 2.3.2 Windows
+
+Windows uses `.dll` files for shared libraries and `.lib` files as import libraries, and symbols are <span style={{color:'#e74c3c'}}>not</span> exported [by default](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170). And for debug build, `.pdb` files are also emitted for Visual Studio debugger to map compiled code back to the original source code. So what the CI team ended up doing was to let `cmake` emit those extra third parties as [static libraries](https://learn.microsoft.com/en-us/cpp/build/reference/overview-of-lib?view=msvc-170) also in `.lib`s, and then from my project, I
+
+1. statically link against these extra third parties directly,
+2. dynamically link against the *clickhouse-cpp* library.
+
+## 3 The Coding 👨‍💻
+
+After all those <span style={{color:'#ff8000'}}>hassles</span>, I was finally writing code. In short, there were two versions of the implementation in the process, and we are finally getting to the template part.
+
+### 3.1 First Implementation
+
+In the first try, I wrote code for a very specific use case, targeting only one downstream sub-project within my project (fairly low in the dependency tree). I did some simple ad-hoc optimizations such as
+
+* overlapping data preparation with data transmission, using `std::future`
+* tabular data duplicate column buffering
+* block size estimation and pre-allocation
+
+The results were generally acceptable, and my code got merged into the main branch ✌️.
+
+### 3.2 Second Implementation
+
+:::warning[pain starts]
+:::
+
+But that was when things took a <span style={{color:'#e74c3c'}}>sharp</span> turn. I had another request that a new feature would also use the *ClickHouse* functionality, which called for a rewrite.
+
+Since that feature belonged to another sub-project, I wanted to abstract away the complexity of linking with *clickhouse-cpp*, by **moving the implementation to a top-level sub-project**, so that downstream code could use it without needing to link the dependency themselves, to <span style={{color:'#33c1ff'}}>minimize</span> build time and avoid linking (on that damn Windows).
+
+This seemed like a great design, let's do it!
+
+<img className="mdx-img" src={OrIsItImageUrl} alt="or-is-it"/>
+
+#### 3.2.1 Type Mapping
+
+The first hurdle was type mapping. Since the first implementation had a very consistent data type mapping relations, and only in one dimension, mapping can be done quite easily. But the new feature required an array of `float32`s, which was a nightmare to my previous design.
+
+To address that, I have two separate classes to manage mapped column types
+
+1. `OneDimDataType`, original, mapped by one dimensional data types
+2. `PlainDataType`, mapped by plain names
+
+These two classes come in handy when I want to know which column type a *ClickHouse* column is, so that I could do proper data manipulation.
+
+#### 3.2.2 Reading 🌟
+
+Since my first implementation didn't involve reading values, I didn't do anything for that matter. Now, there was a need to read data into C++. That was when my puny brain started doing the <span style={{color:'#e74c3c'}}>**unimaginables**</span> - templates! I first thought by implementing a read template method and use concrete types like
+
+```cpp
+template<typename T>
+class ClickHouseColumn
+{
+	// ColumnRef is from the clickhouse-cpp API
+	void ReadIntoVector(const ColumnRef&, std::vector<T>&);
+};
+
+template<typename T>
+void ClickHouseColumn<T>::ReadIntoVector(const ColumnRef& col, std::vector<T>& value)
+{
+	// impl ...
+}
+```
+
+would suffice, and
+
+> wow templates are so cool, lol 😂
+
+so I immediately started refactoring my class interface.
+
+And this top-level sub-project compiled just fine. But when I tried to link against this top-level sub-project in downstream sub-projects that needed this read function, I got <span style={{color:'#e74c3c'}}>errors</span> that I had unresolved symbols. That weekend, I was scratching my head going through StackOverflow, ChatGPT, Reddit and more to furiously figure out what was wrong, only to later realize the
+
+:::danger[culprit]
+is template instantiation at compile time!
+:::
+
+It happened because
+
+1. When my top-level sub-project compiled, the implementation had been moved to `.h` header files, for templates to work.
+2. When my downstream sub-project needed to use the interface, it tried to specialize it.
+3. The downstream sub-project saw the implementation of calling to *ClickHouse* specific functions.
+	- most <span style={{color:'#ff8000'}}>notably</span> the destructor
+	- any other calls to the *clickhouse-cpp* library
+4. The downstream sub-project now had to link against *clickhouse-cpp*, which went contrary to where we started.
+
+As a result, even though the downstream code didn't directly include the *clickhouse-cpp* library, the template class would force the compiler to instantiate the full implementation every time a translation unit included the template.
+
+##### 3.2.2.1 The Fix ✅
+
+To decouple the interface from the third party dependency, I replaced templates with abstract base classes and virtual destructors. Each concrete implementation now lives in the top-level sub-project, hiding *ClickHouse* details from downstream consumers. And I sprinkled some 
+
+1. `dynamic_pointer_cast`
+2. or `static_pointer_cast` if I was feeling lucky
+
+to get the correct type at runtime, in each downstream sub-project that needed to use the interface.
+
+:::tip[Lesson]
+Templates can inadvertently propagate third-party dependencies through header files. Use runtime polymorphism when isolation matters.
+:::
+
+#### 3.2.3 Multi-threading
+
+To speed up reading/writing, I use multiple threads to simultaneously operate on the same database. This lead to [thread safety](https://github.com/ClickHouse/clickhouse-cpp?tab=readme-ov-file#thread-safety) issues, which I was not aware of, half due to my carelessness. I instantiated one `Client` for each thread.
+
+## 4 Misc 🐛
+
+Now what if I want to track *clickhouse-cpp* updates? I follow below workflow to <span style={{color:'#33c1ff'}}>minimize</span> the manual work I have do each time I want to upgrade the third party version.
+
+Specifically, I use `git subtree` to manage updates. Suppose the source code lives under `source` directory, I prepared the repo like so.
+
+```shell
+# commit 1
+rm -rf source/*
+
+# commit 2
+git subtree pull --prefix=source git@github.com:ClickHouse/clickhouse-cpp.git master --squash
+
+# commit 3
+# the renaming commit
+
+# commit 4
+rm -rf source/.*
+
+# commit 5
+git cherry-pick <commit hash for the renaming>
+```
+
+The rationale behind the renaming commit 3 is introduced at part [2.1](#symbol-conflict-resolution).
+
+These steps ensure a traceable commit history. Using subtree I can manage upgrades while preserving the commits I made to the directory, so future upgrades are as simple as
+
+```shell
+git subtree pull \
+	--prefix=source \
+	git@github.com:ClickHouse/clickhouse-cpp.git [target branch] \
+	--squash
+```
+
+plus some manual work if newly introduced code has used conflicting symbols.

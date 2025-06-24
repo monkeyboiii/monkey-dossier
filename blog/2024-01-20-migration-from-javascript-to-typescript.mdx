@@ -180,8 +180,7 @@ At the beginner level, let's get familiar with some common types and the syntax 
 
 Now let's see some examples of these types in action.
 
-::::warning
-Showcasing a captured error
+::::warning[showcasing a captured error]
 ```typescript
 // Annotation by adding `:`
 function greet(person: string, date: Date){
@@ -190,8 +189,8 @@ function greet(person: string, date: Date){
 
 greet("Maddison", Date());
 ```
-:::danger
-Error: argument of type `string` is not assignable to parameter of type `Date`
+:::danger[compiler error]
+Argument of type `string` is not assignable to parameter of type `Date`.
 :::
 
 Fixable by adding `new` keyword before `Date()`
@@ -806,8 +805,7 @@ const warn = ConstLogLevel.WARN;
 console.log(ConstLogLevel['WARN']) // outputs "1"
 ```
 
-:::warning
-Incoming pitfalls!
+:::warning[Incoming pitfalls!]
 :::
 
 Constant enums are inlined, so if you use ambient const enums (basically enums inside `.d.ts` files, prefixed with `declare` keyword, more on this in part <Link to="#part-4-4">4.4</Link>), the `tsc` compiler of your downstream consumers will not recognize reference to the enum member, so you have to be careful not to use that. One solution is not to publish ambient const enums, by deconstifying them with the help of `perserveConstEnums`.

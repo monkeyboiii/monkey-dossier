@@ -48,3 +48,14 @@
   white-space: nowrap;
   border: 0;
 }
+
+.mdx-img {
+  display: block;
+  margin: auto;
+}
+
+.mdx-img-half-width {
+  display: block;
+  margin: auto;
+  width: 50%;
+}
