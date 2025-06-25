@@ -1,0 +1,14 @@
+optimization:
+  label: Optimization
+  permalink: /optimization
+  description: Optimization
+
+semantics:
+  label: Semantics
+  permalink: /semantics
+  description: Language semantics
+
+pattern:
+  label: Pattern
+  permalink: /pattern
+  description: Design patterns
