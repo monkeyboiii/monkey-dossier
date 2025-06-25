@@ -12,3 +12,8 @@ pattern:
   label: Pattern
   permalink: /pattern
   description: Design patterns
+
+algorithm:
+  label: Algorithm
+  permalink: /algorithm
+  description: Algorithm design & implementation
