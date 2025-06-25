@@ -40,9 +40,10 @@ const FeatureList: FeatureItem[] = [
     Svg: TravelSvg,
     description: (
       <>
-        <a href="/lifestyle/blog/china-hometown">
+        {/* <a href="/lifestyle/blog/china-hometown">
           🇨🇳<span className="sr-only">China</span>
-        </a>{' '}
+        </a>{' '} */}
+        🇨🇳<span className="sr-only">China</span>{' '}
 
         🇹🇼<span className="sr-only">Hong Kong</span>{' '}
         🇲🇴<span className="sr-only">Macao</span>{' '}
@@ -50,11 +51,12 @@ const FeatureList: FeatureItem[] = [
 
         <br></br>
 
-        <a href="/lifestyle/blog/us-trip">
+        <a href="/lifestyle/blog/us-west-trip">
           🇺🇸<span className="sr-only">United States</span>
         </a>{' '}
 
         🇩🇰<span className="sr-only">Denmark</span>{' '}
+        🇮🇸<span className="sr-only">Iceland</span>{' '}
         <a href="/lifestyle/blog/iceland-ring-road">
           🇮🇸<span className="sr-only">Iceland</span>
         </a>{' '}

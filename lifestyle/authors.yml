@@ -1,10 +1,15 @@
 calvin:
   name: Calvin Lu
-  title: MicroStrategy Engineer
-  url: https://github.com/monkeyboiii
-  image_url: https://github.com/monkeyboiii/monkey-dossier/blob/main/static/img/portrait-hk.jpg
+  title: Exploring the world
+  image_url: https://github.com/monkeyboiii.png
   page: true
   socials:
     x: calvinlu88
-    linkedin: calvinlu88
-    github: monkeyboiii
+
+cici:
+  name: Huiyi Xu
+  title: Love of Calvin
+  # image_url: https://github.com/monkeyboiii.png
+  page: true
+  # socials:
+    # x: calvinlu88
