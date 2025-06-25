@@ -126,7 +126,7 @@ const config: Config = {
           items: [
             {
               label: 'Learning',
-              to: '/learning/intro',
+              to: '/learning/introduction',
             },
             {
               label: 'Blog',

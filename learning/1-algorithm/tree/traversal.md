@@ -1,6 +1,6 @@
 ---
-slug: tree-traversal
-title: Tree
+slug: traversal
+title: Traversal
 tags:
 - algorithm
 - optimization

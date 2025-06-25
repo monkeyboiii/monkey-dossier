@@ -94,16 +94,7 @@ function Feature({ title, Svg, description }: FeatureItem) {
 
 export default function HomepageFeatures(): ReactNode {
   return (
-    <section
-      className={styles.features}
-      style={{
-        position: 'relative',
-        backgroundImage: "url('/img/lifestyle-portrait.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-      }}
-    >
+    <section className={styles.features}>
       <div className="container">
         <div className="row">
           {FeatureList.map((props, idx) => (
