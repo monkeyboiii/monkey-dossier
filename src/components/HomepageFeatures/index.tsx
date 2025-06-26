@@ -47,7 +47,7 @@ const FeatureList: FeatureItem[] = [
 
         <br></br>
 
-        <a href="/lifestyle/us-trip-west">
+        <a href="/lifestyle/us-west-trip">
           🇺🇸<span className="sr-only">United States</span>
         </a>{' '}
 
