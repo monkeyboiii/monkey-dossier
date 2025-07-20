@@ -23,3 +23,7 @@ code-typescript:
   permalink: /code-typescript
   description: TypeScript coding content
 
+code-env:
+  label: Environment
+  permalink: /code-env
+  description: Infrastructure for coding, environments, and tools
