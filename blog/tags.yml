@@ -27,3 +27,8 @@ code-env:
   label: Environment
   permalink: /code-env
   description: Infrastructure for coding, environments, and tools
+
+self-hosting:
+  label: Self-hosting
+  permalink: /self-hosting
+  description: Host applications yourselves, enjoy the beauty of OSS
