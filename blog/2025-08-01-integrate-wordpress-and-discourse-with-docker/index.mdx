@@ -15,7 +15,7 @@ I'm no front end developer, but I host [dirtbikechina.com](https://www.dirtbikec
 
 ## 1 Introduction
 
-**dirtbikechina.com™** is a project that aims to build the <span style={{color:'#33c1ff'}}>largest</span> online community for dirt bike lovers based in China. In this post, I'll attempt to document the process and effort towards this goal, both technical and anecdotal.
+**dirtbikechina.com™** is a project that aims to build the <span style={{color:'#33c1ff'}}>largest</span> online community for dirt bike lovers based in China. In this post, I'll attempt to document the process and technical effort towards this goal. For anecdotal stories, refer to this [post](https://calvin.dirtbikechina.com/lifestyle/dirtbikechina-anecdotes).
 
 ## 2 Tech Stacks
 
@@ -24,8 +24,9 @@ Using OSS applications including
 1. [Discourse](https://www.discourse.org/) for the main online forum.
 2. [Wanderer](https://wanderer.to/) for trail recording and sharing support.
 3. [WordPress](https://wordpress.org/) for long-form articles.
-4. [Caddy](https://caddyserver.com/) for reverse proxy, SSL termination, etc.
-5. [Docker](https://www.docker.com/) to nicely wrap it all up.
+4. [Logto](https://logto.io/) for authentication and authorization.
+5. [Caddy](https://caddyserver.com/) for reverse proxy, SSL termination, etc.
+6. [Docker](https://www.docker.com/) to nicely wrap it all up.
 
 we can self-host the project on a single Linux server.
 
@@ -35,7 +36,11 @@ we can self-host the project on a single Linux server.
 
 ### 2.2 URLs
 
-
+1. [Newsletter](https://www.dirtbikechina.com/), only authorized writers.
+2. [Forum](https://forum.dirtbikechina.com/), every trusted meenber is able to talk.
+3. [Trail management](https://trails.dirtbikechina.com/), integrate with iOS/Andriod app to record, edit, share trails.
+4. [Authentication](https://auth.dirtbikechina.com/), single-sign-on and user management.
+5. [CDN](https://cdn.dirtbikecn.com/), speedup for Chinese user.
 
 ## 3 Prerequisites
 
@@ -138,7 +143,7 @@ export $(grep -v '^\s*#' .env | xargs)
 docker exec -it mysql mysql \
 	-u"$MYSQL_USER" \
 	-p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" \
-	-e "UPDATE wp_options SET option_value = 'https://news.dirtbikechina.com' WHERE option_name IN ('siteurl','home');"
+	-e "UPDATE wp_options SET option_value = 'https://www.dirtbikechina.com' WHERE option_name IN ('siteurl','home');"
 
 # confirm
 docker exec -it mysql mysql \
@@ -149,8 +154,10 @@ docker exec -it mysql mysql \
 
 #### 4.2.1 Customization
 
-1. Use [news x](https://wp-royal-themes.com/themes/item-news-magazine-x-free/#!/demo-preview) theme.
+1. Use [News Magazine X](https://wp-royal-themes.com/themes/item-news-magazine-x-free/#!/demo-preview) theme.
 2. Privacy page using either built-in support or third-party plugin to auto-generate.
+3. Brevo subscription form inside NMX subscription form block.
+4. WP-SSO plugin.
 
 ### 4.3 Discourse 🌟
 
@@ -180,8 +187,8 @@ cd /var/discourse
 | 🟢 | [Google OAuth 2.0](https://meta.discourse.org/t/configure-google-login-for-discourse/15858)     | Login via Google   |           |
 | 🟡 | [Apple OAuth 2.0](https://meta.discourse.org/t/discourse-apple-authentication/171485)           | Login via Apple    |           |
 | 🟡 | [SMTP Testing](https://app.brevo.com/)                                                          | Register via Email | Must-have |
-| 🟢 | [DiscourseConnet](https://meta.discourse.org/t/configure-single-sign-on-sso-with-wp-discourse-and-discourseconnect/223494#logging-in-to-wordpress-with-discourse-discourseconnect-client-9) provider | SSO provider |
-| 🟢 | WP-Discourse [install](https://wordpress.org/plugins/wp-discourse/)                             | SSO client         | Easy      |
+| 🟢 | [DiscourseConnect](https://meta.discourse.org/t/configure-single-sign-on-sso-with-wp-discourse-and-discourseconnect/223494#logging-in-to-wordpress-with-discourse-discourseconnect-client-9) provider | SSO provider |
+| 🟢 | WP-Discourse [install](https://wordpress.org/plugins/wp-discourse/)                             | Comment management | Easy      |
 | 🔴 | Wanderer custom SSO through Oauth 2.0                                                           | SSO client         | Need investigation with existing discourse provider option |
 | 🟣 | Badge System                                                                                    | Customization      | Outsource |
 | 🟣 | Logo System                                                                                     | Customization      | Outsource |
@@ -206,6 +213,12 @@ Create a superuser in container like [here](https://pocketbase.io/docs/going-to-
 - [ ] Login via discourse (recommended)
 - [ ] Embed iframe in discourse
 
-### 4.5 Caddy Configuration
+### 4.5 Logto
+
+#### 4.5.1 Install
+
+
+
+### 4.6 Caddy Configuration
 
 Refer to `Caddyfile`.
